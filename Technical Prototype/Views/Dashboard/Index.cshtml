@@ -1,0 +1,94 @@
+﻿@{
+    ViewBag.Title = "Index";
+}
+
+<style>
+    .bar {
+        fill: steelblue;
+    }
+
+    line {
+        stroke:rgb(0,0,0);
+        stroke-width:2;
+    }
+
+    
+</style>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+<script language="javascript">
+
+    function drawChart(data) {
+        var lines = [];
+        for (i = 0; i < data.length - 1; ++i) {
+            var line = new Map();
+            line["source"] = data[i];
+            line["dest"] = data[i + 1];
+            lines.push(line);
+        }
+        var width = 960,
+        height = 500;
+
+        var y = d3.scale.linear()
+            .range([height, 0])
+            .domain([0, d3.max(data, function (d) { return d.Y; })+2]);
+
+        var x = d3.scale.linear()
+            .range([-1, width])
+            .domain([0, d3.max(data, function (d) { return d.ID; })+1]);
+
+        var chart = d3.select(".chart")
+            .attr("width", width)
+            .attr("height", height);
+
+        chart.selectAll("circle")
+            .data(data)
+          .enter().append("circle")
+            .attr("cx", function (d) { return x(d.ID); })
+            .attr("cy", function (d) { return y(d.Y); })
+            //.attr("r", 20)
+            //.transition().duration(1000)
+            .attr("r", 5);
+
+        chart.selectAll("line")
+            .data(lines)
+            .enter().append("line")
+            //.attr("x1", function (d) { return x(d.source.ID) })
+            //.attr("y1", function (d) { return y(d.source.Y) })
+            //.attr("x2", function (d) { return x(d.source.ID) })
+            //.attr("y2", function (d) { return y(d.source.Y) })
+            //.transition().delay(1000).duration(1000)
+            .attr("x1", function (d) { return x(d.source.ID) })
+            .attr("y1", function (d) { return y(d.source.Y) })
+            .attr("x2", function (d) { return x(d.dest.ID) })
+            .attr("y2", function (d) { return y(d.dest.Y) });
+
+        chart.selectAll("text")
+            .data(data)
+            .enter().append("text")
+            .text(function (d) { return d.Y })
+            .attr("x", function (d) { return x(d.ID) - 10 })
+            .attr("y", function (d) { return y(d.Y) - 30 })
+            //.attr("font-size", "1pt")
+            //.transition().delay(2000).duration(1000)
+            .attr("font-size", "20pt");
+            
+    }
+
+    var request = new XMLHttpRequest();
+    request.open("GET", "/DataAPI/GetDataPoints/", true);
+    request.onload = function () {
+        var response = request.responseText;
+        var dataPoints = JSON.parse(response);
+        drawChart(dataPoints);
+    }
+    request.onerror = function () {
+        var node = document.getElementsByClassName("chart")[0];
+        node.innerHTML = "Error loading data points";
+    }
+    request.send(null);
+</script>
+
+<br /><br />
+<svg class="chart"></svg>
+<br /><br />
